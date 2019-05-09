@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>jQuery特效</title>
+    <style type="text/css">
+        div, #paragraph1 {color: green; margin-left: 30px}
+    </style>
+    <script type="text/javascript" src="http://apps.bdimg.com/libs/jquery/1.6.4/jquery.min.js"></script>
+</head>
+<body>
+    <p id="message">p_label</p>
+    <p id="paragraph1">green_p_label</p>
+    <button>button_label</button>
+    <script>
+        $("button").hide();
+        $("button").fadeTo("slow", 0.5, function(){
+            alert("渐变已经完成");
+        });
+        $("p").animate({
+            left: "1000px",
+            width: "650px"
+        },
+        "fast", function(){
+            alert("自定义动画已经完成");
+        });
+        $("#paragraph1").stop();
+    </script>
+</body>
+</html>

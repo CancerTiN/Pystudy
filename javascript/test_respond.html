@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>事件响应</title>
+    <script type="text/javascript" src="http://apps.bdimg.com/libs/jquery/1.6.4/jquery.min.js"></script>
+</head>
+<body>
+    <a>A</a>
+    <script>
+        $(document).ready(function(){
+            alert("文档已全部加载！");
+        });
+        $("a").mouseleave(function(){
+            alert("鼠标已经离开<a>标记！");
+        });
+    </script>
+</body>
+</html>
