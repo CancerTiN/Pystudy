@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试链接和图像</title>
+</head>
+<body>
+<!--点击链接在当前窗口进入百度-->
+<a href="https://www.baidu.com" target="_self">点击进入百度</a>
+<!--请求src内的图片链接，并尝试展示图片，如果图片显示失败时替换为alt内的文字（这里会显示文字）-->
+<img src="http://mysite.com/mypic.png"
+     alt="网站作者的照片"/>
+<!--请求src内的图片链接，并尝试展示图片，如果图片显示失败时替换为alt内的文字（这里会显示图片）-->
+<img src="http://www.majorbio.com/storage/img_files/page_content/2018-05-07-17-37-42-majorbio.png"
+     alt="真核转录组跨入百元时代"/>
+<!--网页内的超链接，链接方向为href，如果src的图片存在则为图片超链接，否则替换为alt里的文字超链接（这里会显示文字）-->
+<a href="http://mysite.com/readme.html" target="_self">
+    <img src="http://mysite.com/mypic.png"
+         alt="网站作者的照片"/>
+</a>
+<!--网页内的超链接，链接方向为href，如果src的图片存在则为图片超链接，否则替换为alt里的文字超链接（这里会显示图片）-->
+<a href="http://www.majorbio.com" target="_parent">
+    <img src="http://www.majorbio.com/site/majorbio/images/page-banner.jpg"
+         alt="服务与产品"/>
+</a>
+</body>
+</html>
