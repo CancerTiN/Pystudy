@@ -13,9 +13,9 @@ s.listen(1)
 
 while True:
     conn, addr = s.accept()
-    print 'Client {} connected!'.format(addr)
+    print('Client {} connected!'.format(addr))
     dt = datetime.datetime.now()
     message = 'Current time is {}'.format(dt)
     conn.send(message)
-    print 'Sent following data to {}:\n{}'.format(conn, message)
+    print('Sent following data to {}:\n{}'.format(conn, message))
     conn.close()
