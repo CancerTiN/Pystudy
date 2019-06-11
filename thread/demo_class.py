@@ -16,10 +16,19 @@ def decorator(func):
     return wrapper
 
 class SubThread(threading.Thread):
+    def __init__(self, func=None):
+        threading.Thread.__init__(self)
+        self._func = func
+
+    @decorator
     def run(self):
-        for i in range(3):
-            time.sleep(1)
-            print('{} is running at {}'.format(self.name, i))
+        if self._func:
+            print('start calling function ({})'.format(self._func.__name__))
+            self._func()
+        else:
+            for i in range(3):
+                time.sleep(1)
+                print('{} is running at {}'.format(self.name, i))
 
 @decorator
 def main():
