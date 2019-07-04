@@ -1,0 +1,25 @@
+SAMPLES = ["Con1", "Con2", "Con3", "Con4", "Con5", "Vit1", "Vit2", "Vit3", "Vit4", "Vit5"]
+hisat2 = "~/sg-users/qinjincheng/miniconda3/bin/hisat2"
+ht2_idx = "hg19"
+
+rule all:
+	input:
+		"sam.list"
+
+rule hisat2:
+	input:
+		m1="rawdata/{sample}_sickle_l.fastq",
+		m2="rawdata/{sample}_sickle_r.fastq"
+	output:
+		"mapped/{sample}.sam"
+	threads: 2
+	shell:
+		"{hisat2} --dta-cufflinks -x {ht2_idx} -p {threads} -1 {input.m1} -2 {input.m2} -S {output}"
+
+rule ls:
+	input:
+		expand("mapped/{sample}.sam", sample=SAMPLES)
+	output:
+		"sam.list"
+	shell:
+		"ls {input} > {output}"
