@@ -29,3 +29,15 @@ def classify0(inX, dataSet, labels, k):
     print('sortedClassCount: {}'.format(sortedClassCount))
     return sortedClassCount[0][0]
 
+def file2matrix(filename):
+    arrayOfLines = open(filename).readlines()
+    numberOfLines = len(arrayOfLines)
+    returnMat = np.zeros((numberOfLines, 3))
+    classLabelVector = list()
+    for index, line in enumerate(arrayOfLines):
+        listFromLine = line.strip().split('\t')
+        returnMat[index, :] = listFromLine[:3]
+        classLabelVector.append(int(listFromLine[-1]))
+    else:
+        return returnMat, classLabelVector
+
