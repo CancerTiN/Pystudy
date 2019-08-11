@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
 
 X_train = np.array([
     [158, 64],
@@ -48,3 +50,7 @@ print('predicted labels: {}'.format(predictions_labels))
 
 Accuracy = accuracy_score(y_test_binarized, predictions_binarized)
 print('accuracy: {}'.format(Accuracy))
+Precision = precision_score(y_test_binarized, predictions_binarized)
+print('precision: {}'.format(Precision))
+Recall = recall_score(y_test_binarized, predictions_binarized)
+print('recall: {}'.format(Recall))

@@ -19,12 +19,13 @@ X_train = np.array([
     [170, 67],
 ])
 print('explanatory variable: {}'.format(X_train))
-y_train = ['male'] * 4 + ['female'] * 5
+y_train = np.array(['male'] * 4 + ['female'] * 5)
 print('response variable: {}'.format(y_train))
 
 lb = LabelBinarizer()
 y_train_binarized = lb.fit_transform(y_train)
 print('response variable binarized: {}'.format(y_train_binarized))
+print('response variable binarized: {}'.format(y_train_binarized.reshape(-1)))
 K = 3
 print('n neighbors: {}'.format(K))
 clf = KNeighborsClassifier(n_neighbors=K)
@@ -33,6 +34,3 @@ predicted_binarized = clf.predict(np.array([[155, 70], [200, 100]]))
 print('predicted binarized: {}'.format(predicted_binarized))
 predicted_label = lb.inverse_transform(predicted_binarized)
 print('predicted label: {}'.format(predicted_label))
-
-
-

@@ -18,6 +18,7 @@ X_train = np.array([
 ])
 print('explanatory variable: {}'.format(X_train))
 y_train = ['male'] * 4 + ['female'] * 5
+y_train = np.array(y_train)
 print('response variable: {}'.format(y_train))
 
 plt.figure()
@@ -39,4 +40,5 @@ nearest_neighbor_genders = np.take(y_train, nearest_neighbor_indices)
 print('nearest neighbor genders: {}'.format(nearest_neighbor_genders))
 
 b = Counter(nearest_neighbor_genders)
+print('predict gender: {}'.format(b.most_common(1)))
 print('predict gender: {}'.format(b.most_common(1)[0][0]))

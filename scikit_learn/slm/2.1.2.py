@@ -17,6 +17,8 @@ y_bar = y.mean()
 print('response variable mean: {}'.format(y_bar))
 covariance = np.multiply((X - x_bar).transpose(), y - y_bar).sum() / (X.shape[0] - 1)
 print('covariance: {}'.format(covariance))
+np_cov = np.cov(X.transpose(), y)
+print('np cov: {}'.format(np_cov))
 beta = covariance / variance
 print('beta: {}'.format(beta))
 alpha = y_bar - beta * x_bar
