@@ -30,5 +30,22 @@ def test2():
     plt.show()
     print('#' * 64)
 
+def test3():
+    print('#' * 64)
+    datingDataMat, datingLabels = kNN.file2matrix('datingTestSet2.txt')
+    print('datingDataMat: {}'.format(datingDataMat))
+    print('datingLabels: {}'.format(datingLabels))
+    normMat, ranges, minVals = kNN.autoNorm(datingDataMat)
+    print('#' * 64)
+    print('normMat: {}'.format(normMat))
+    print('ranges: {}'.format(ranges))
+    print('minVals: {}'.format(minVals))
+    print('#' * 64)
+
+def test4():
+    print('#' * 64)
+    kNN.datingClassTest()
+    print('#' * 64)
+
 if __name__ == '__main__':
-    test2()
+    test4()
