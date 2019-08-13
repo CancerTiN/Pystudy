@@ -2,6 +2,7 @@ from MLiA.chapter02 import kNN
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import operator
 
 def test1():
     print('#' * 64)
@@ -47,5 +48,28 @@ def test4():
     kNN.datingClassTest()
     print('#' * 64)
 
+def test5():
+    print('#' * 64)
+    kNN.classifyPerson(ffMiles=10000, percentTats=0.5, iceCream=10)
+    print('#' * 64)
+
+def test6():
+    print('#' * 64)
+    testVector = kNN.img2vector('trainingDigits/0_13.txt')
+    print('testVector: {}'.format(testVector))
+    print('#' * 64)
+
+def test7():
+    print('#' * 64)
+    kToErrorRates = list()
+    for k in range(3, 34):
+        errorRate = kNN.handwritingClassTest(k)
+        kToErrorRates.append((k, errorRate))
+        print('#' * 64)
+    else:
+        bestRank = sorted(kToErrorRates, key=operator.itemgetter(1))
+        print('the groups including k and related error rate are:\n{}'.format(bestRank))
+    print('#' * 64)
+
 if __name__ == '__main__':
-    test4()
+    test7()
