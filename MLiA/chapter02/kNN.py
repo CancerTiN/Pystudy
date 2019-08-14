@@ -1,11 +1,14 @@
-import numpy as np
 import operator
 import os
+
+import numpy as np
+
 
 def createDataSet():
     group = np.array([[1.0, 1.1], [1.0, 1.0], [0, 0], [0, 0.1]])
     labels = ['A', 'A', 'B', 'B']
     return group, labels
+
 
 def classify0(inX, dataSet, labels, k):
     dataSetSize = dataSet.shape[0]
@@ -30,6 +33,7 @@ def classify0(inX, dataSet, labels, k):
     # print('sortedClassCount: {}'.format(sortedClassCount))
     return sortedClassCount[0][0]
 
+
 def file2matrix(filename):
     arrayOfLines = open(filename).readlines()
     numberOfLines = len(arrayOfLines)
@@ -41,6 +45,7 @@ def file2matrix(filename):
         classLabelVector.append(int(listFromLine[-1]))
     else:
         return returnMat, classLabelVector
+
 
 def autoNorm(dataSet):
     minVals = dataSet.min(0)
@@ -54,6 +59,7 @@ def autoNorm(dataSet):
     normDataSet = (dataSet - np.tile(minVals, (m, 1))) / np.tile(ranges, (m, 1))
     return normDataSet, ranges, minVals
 
+
 def datingClassTest():
     hoRatio = 0.1
     datingDataMat, datingLabels = file2matrix('datingTestSet2.txt')
@@ -62,14 +68,15 @@ def datingClassTest():
     numTestVecs = int(m * hoRatio)
     errorCount = 0.0
     for i in range(numTestVecs):
-        classifierResult = classify0(normMat[i,:], normMat[numTestVecs:m,:], datingLabels[numTestVecs:m],3)
+        classifierResult = classify0(normMat[i, :], normMat[numTestVecs:m, :], datingLabels[numTestVecs:m], 3)
         print('the classifier came back with: {}, the real answer is: {}'.format(classifierResult, datingLabels[i]))
         if classifierResult != datingLabels[i]:
             errorCount += 1.0
     else:
         print('the total error rate is: {}'.format(errorCount / numTestVecs))
 
-def classifyPerson(ffMiles: float, percentTats:float, iceCream: float):
+
+def classifyPerson(ffMiles: float, percentTats: float, iceCream: float):
     print('frequent flier miles earned per years? ({})'.format(ffMiles))
     print('percentage of time spent playing video games? ({})'.format(percentTats))
     print('liters if ice cream consumde per year? ({})'.format(iceCream))
@@ -81,12 +88,14 @@ def classifyPerson(ffMiles: float, percentTats:float, iceCream: float):
     classifierResult = classify0(normArr, normMat, datingLabels, 3)
     print('you will probably like this person: {}'.format(resultList[classifierResult - 1]))
 
+
 def img2vector(filename):
     dataList = list()
     for line in open(filename):
         dataList.extend(map(int, list(line.strip())))
     else:
         return np.array(dataList)
+
 
 def handwritingClassTest(k=3, trainingDatDir='trainingDigits', testDatDir='testDigits'):
     print('{} nearest neighbor will be considered'.format(k))
@@ -96,7 +105,7 @@ def handwritingClassTest(k=3, trainingDatDir='trainingDigits', testDatDir='testD
     getClassNum = lambda s: int(s.split('_')[0])
     for i, fileNameStr in enumerate(trainingFileList):
         hwLabels.append(getClassNum(fileNameStr))
-        trainingMat[i,:] = img2vector(os.path.join(trainingDatDir, fileNameStr))
+        trainingMat[i, :] = img2vector(os.path.join(trainingDatDir, fileNameStr))
     else:
         pass
         # print('succeed in building data matrix from {} files'.format(i + 1))

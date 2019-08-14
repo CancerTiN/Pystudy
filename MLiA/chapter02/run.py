@@ -1,8 +1,11 @@
-from MLiA.chapter02 import kNN
+import operator
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import operator
+
+from MLiA.chapter02 import kNN
+
 
 def test1():
     print('#' * 64)
@@ -17,6 +20,7 @@ def test1():
     print('predicted_label: {}'.format(predicted_label))
     print('#' * 64)
 
+
 def test2():
     print('#' * 64)
     datingDataMat, datingLabels = kNN.file2matrix('datingTestSet2.txt')
@@ -25,11 +29,12 @@ def test2():
     print('#' * 64)
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(datingDataMat[:,1], datingDataMat[:,2],
+    ax.scatter(datingDataMat[:, 1], datingDataMat[:, 2],
                15.0 * np.array(datingLabels),
                15.0 * np.array(datingLabels))
     plt.show()
     print('#' * 64)
+
 
 def test3():
     print('#' * 64)
@@ -43,21 +48,25 @@ def test3():
     print('minVals: {}'.format(minVals))
     print('#' * 64)
 
+
 def test4():
     print('#' * 64)
     kNN.datingClassTest()
     print('#' * 64)
+
 
 def test5():
     print('#' * 64)
     kNN.classifyPerson(ffMiles=10000, percentTats=0.5, iceCream=10)
     print('#' * 64)
 
+
 def test6():
     print('#' * 64)
     testVector = kNN.img2vector('trainingDigits/0_13.txt')
     print('testVector: {}'.format(testVector))
     print('#' * 64)
+
 
 def test7():
     print('#' * 64)
@@ -70,6 +79,7 @@ def test7():
         bestRank = sorted(kToErrorRates, key=operator.itemgetter(1))
         print('the groups including k and related error rate are:\n{}'.format(bestRank))
     print('#' * 64)
+
 
 if __name__ == '__main__':
     test7()
