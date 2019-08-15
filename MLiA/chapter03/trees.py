@@ -1,5 +1,6 @@
 import math
 import operator
+import pickle
 
 def calcShannonEnt(dataSet):
     numEntries = len(dataSet)
@@ -21,14 +22,16 @@ def createDataSet():
     labels = ['no surfacing', 'flippers']
     return dataSet, labels
 
+
 def splitDataSet(dataSet, axis, value):
     retDataSet = list()
     for featVec in dataSet:
         if featVec[axis] == value:
-            reducedFeatVec = featVec[:axis] + featVec[axis+1:]
+            reducedFeatVec = featVec[:axis] + featVec[axis + 1:]
             retDataSet.append(reducedFeatVec)
     else:
         return retDataSet
+
 
 def chooseBestFeatureToSplit(dataSet):
     numFeatures = len(dataSet[0]) - 1
@@ -56,6 +59,7 @@ def chooseBestFeatureToSplit(dataSet):
         # print('feature ({}) gives the minimum entropy ({})'.format(bestFeature, minEntropy))
         return bestFeature
 
+
 def majorityCnt(classList):
     classCount = dict()
     for vote in classList:
@@ -64,32 +68,48 @@ def majorityCnt(classList):
         sortedClassCount = sorted(classCount.items(), key=operator.itemgetter(1), reverse=True)
         return sortedClassCount[0][0]
 
+
 def createTree(dataSet, labels):
-    print('+' * 64)
-    print('dataSet: {}'.format(dataSet))
-    print('labels: {}'.format(labels))
     classList = [example[-1] for example in dataSet]
     if classList.count(classList[0]) == len(classList):
-        print('type1 return from ({})'.format(classList))
-        print('=' * 64)
-        return classList[0]
+        ret = classList[0]
+        print('type1 return ({})'.format(ret))
+        return ret
     if len(dataSet[0]) == 1:
-        print('type2 return from ({})'.format(classList))
-        print('=' * 64)
-        return majorityCnt(classList)
+        ret = majorityCnt(classList)
+        print('type2 return ({})'.format(ret))
+        return ret
     bestFeat = chooseBestFeatureToSplit(dataSet)
     bestFeatLabel = labels[bestFeat]
     myTree = {bestFeatLabel: dict()}
-    print('bestFeat: {}'.format(bestFeat))
-    print('bestFeatLabel: {}'.format(bestFeatLabel))
     labels.pop(bestFeat)
     featValues = [example[bestFeat] for example in dataSet]
     uniqueVals = set(featValues)
+    print('bestFeatLabel: {}'.format(bestFeatLabel))
     for value in uniqueVals:
         subLabels = labels[:]
         myTree[bestFeatLabel][value] = createTree(
             splitDataSet(dataSet, bestFeat, value), subLabels)
-        print('myTree: {}'.format(myTree))
+        print('({}) -> ({})'.format(value, myTree[bestFeatLabel][value]))
     else:
-        print('-' * 64)
+        print('type3 return ({})'.format(myTree))
         return myTree
+
+def classify(inputTree: dict, featLabels: list, testVec: list):
+    firstStr, secondDict = list(inputTree.items())[0]
+    featIndex = featLabels.index(firstStr)
+    key = testVec[featIndex]
+    if isinstance(secondDict[key], dict):
+        subTree = secondDict[key]
+        classLabel = classify(subTree, featLabels, testVec)
+    else:
+        classLabel = secondDict[key]
+    return classLabel
+
+def storeTree(inputTree, filename):
+    pickle.dump(inputTree, open(filename, 'wb'))
+
+def grabTree(filename):
+    return pickle.load(open(filename, 'rb'))
+
+
