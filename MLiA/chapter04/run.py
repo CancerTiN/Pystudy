@@ -58,4 +58,4 @@ def test3():
     print('#' * 64)
 
 if __name__ == '__main__':
-    test2()
+    test3()

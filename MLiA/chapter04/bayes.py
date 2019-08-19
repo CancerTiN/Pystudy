@@ -60,34 +60,21 @@ def trainNB1(trainMatrix, trainCategory):
     p1Denom = 2.0
     print('#' * 64)
     for i, trainDoc in enumerate(trainMatrix):
-        print('trainDoc: {}'.format(trainDoc))
-        print('class: {}'.format(trainCategory[i]))
         if trainCategory[i] == 1:
-            # p1Num是spam
             p1Num += trainDoc
             p1Denom += sum(trainDoc)
         else:
-            # p0Num是ham
             p0Num += trainDoc
             p0Denom += sum(trainDoc)
     else:
-        print('p0Num: {}'.format(p0Num))
-        print('p1Num: {}'.format(p1Num))
         p0Vect = np.log(p0Num / p0Denom)
         p1Vect = np.log(p1Num / p1Denom)
         return p0Vect, p1Vect, pAbusive
 
 def classifyNB(vec2Classify, p0Vec, p1Vec, pClass1):
-    print('vec2Classify: {}'.format(vec2Classify))
-    print('p0Vec: {}'.format(p0Vec))
-    print('p1Vec: {}'.format(p1Vec))
-    print('p1sum: {}'.format(sum(vec2Classify * p1Vec)))
-    print('p0sum: {}'.format(sum(vec2Classify * p0Vec)))
-    # 麻蛋，这个地方+写错了，搞了一个晚上！！！
+    # attention! use + rather than *
     p1 = sum(vec2Classify * p1Vec) + np.log(pClass1)
     p0 = sum(vec2Classify * p0Vec) + np.log(1 - pClass1)
-    print('p1: {}'.format(p1))
-    print('p0: {}'.format(p0))
     if p1 > p0:
         return 1
     else:
@@ -112,6 +99,7 @@ def spamTest():
     docList = list()
     classList = list()
     fullText = list()
+    totalNum = -1
     for d, c in {'ham': 0, 'spam': 1}.items():
         for p in glob.glob('email/{}/*.txt'.format(d)):
             print('start reading {}'.format(p))
@@ -119,28 +107,30 @@ def spamTest():
             docList.append(wordList)
             fullText.extend(wordList)
             classList.append(c)
+            totalNum += 1
     else:
-        print('number of docList: {}'.format(len(docList)))
         vocabList = createVocabList(docList)
     print('vocabList: {}'.format(vocabList))
+    print('#' * 64)
     trainMat = list()
     trainClasses = list()
-    for inputSet, trainClass in zip(docList, classList):
-        trainMat.append(setOfWords2Vec(vocabList, inputSet))
-        trainClasses.append(trainClass)
+    testIndexes = sorted(list(set(random.randint(0, totalNum) for i in range(10))))
+    trainIndexes = list()
+    for idx, (inputSet, trainClass) in enumerate(zip(docList, classList)):
+        if idx not in testIndexes:
+            trainMat.append(setOfWords2Vec(vocabList, inputSet))
+            trainClasses.append(trainClass)
+            trainIndexes.append(idx)
     else:
+        print('trainIndexes: {}'.format(trainIndexes))
         p0V, p1V, pSpam = trainNB1(trainMat, trainClasses)
-    print('p0V: {}'.format(p0V))
-    print('p1V: {}'.format(p1V))
-    print('pSpam: {}'.format(pSpam))
     errorCount = 0.0
     testCount = 0.0
-    for i in sorted(list(set(random.randint(0, 49) for i in range(10)))):
-        print('i: {}'.format(i))
-        wordVector = setOfWords2Vec(vocabList, docList[i])
-        print('wordVector: {}'.format(wordVector))
+    for idx in testIndexes:
+        print('testIndex: {}'.format(idx))
+        wordVector = setOfWords2Vec(vocabList, docList[idx])
         classRet = classifyNB(np.array(wordVector), p0V, p1V, pSpam)
-        classRes = classList[i]
+        classRes = classList[idx]
         print('classRet: {}'.format(classRet))
         print('classRes: {}'.format(classRes))
         if classRet != classRes:
@@ -148,5 +138,3 @@ def spamTest():
         testCount += 1
     else:
         print('the error rate is: {}'.format(errorCount / testCount))
-
-
