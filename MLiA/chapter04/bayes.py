@@ -1,6 +1,8 @@
+import feedparser
 import glob
 import random
 import re
+import operator
 
 import numpy as np
 
@@ -149,4 +151,46 @@ def spamTest():
     else:
         print('the error rate is: {}'.format(errorCount / testCount))
 
+def calcMostFreq(vocabList: list, fullText: list):
+    freqDict = dict()
+    for token in vocabList:
+        freqDict[token] = fullText.count(token)
+    sortedFreq = sorted(freqDict.items(), key=operator.itemgetter(1), reverse=True)
+    return sortedFreq[:30]
 
+def localWords(feed1, feed0):
+    docList = list()
+    classList = list()
+    fullText = list()
+    minLen = min(len(feed1['entries']), len(feed0['entries']))
+    for i in range(minLen):
+        for k, v in {1: feed1, 0: feed0}.items():
+            wordList = textParse(v['entries'][i]['summary'])
+            docList.append(wordList)
+            fullText.extend(wordList)
+            classList.append(k)
+    else:
+        vocabList = createVocabList(docList)
+        top30Words= calcMostFreq(vocabList, fullText)
+        for pairW in top30Words:
+            vocabList.remove(pairW[0])
+    trainingSet = list(range(2 * minLen))
+    testSet = list()
+    for i in range(20):
+        randIndex = random.randint(0, len(trainingSet))
+        testSet.append(trainingSet.pop(randIndex))
+    trainMat = list()
+    trainClasses = list()
+    for docIndex in trainingSet:
+        trainMat.append(bagOfWords2VecMN(vocabList, docList[docIndex]))
+        trainClasses.append(classList[docIndex])
+    else:
+        p0V, p1V, p1C = trainNB1(np.array(trainMat), np.array(trainClasses))
+    errorCount = 0.0
+    for docIndex in testSet:
+        wordVector = bagOfWords2VecMN(vocabList, docList[docIndex])
+        if classifyNB(np.array(wordVector), p0V, p1V, p1C) != classList[docIndex]:
+            errorCount += 1
+    else:
+        print('the error rate is: {}'.format(errorCount / len(testSet)))
+        return vocabList, p0V, p1V
