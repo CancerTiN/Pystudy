@@ -1,8 +1,9 @@
 import random
 
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
 
 def loadDataSet():
     dataMat, labelMat = list(), list()
@@ -13,8 +14,10 @@ def loadDataSet():
     else:
         return dataMat, labelMat
 
+
 def sigmoid(inX):
     return 1.0 / (1 + np.exp(-inX))
+
 
 def gradAscent(dataMatIn, classLabels):
     dataMatrix = np.mat(dataMatIn)
@@ -32,6 +35,7 @@ def gradAscent(dataMatIn, classLabels):
         boolStat = pd.DataFrame(labelMat == h.round())[0].value_counts()
         print('boolStat:\n{}'.format(boolStat))
         return weights
+
 
 def plotBestFit(weights):
     dataMat, labelMat = loadDataSet()
@@ -56,6 +60,7 @@ def plotBestFit(weights):
     plt.ylabel('X2')
     plt.show()
 
+
 def stocGradAscent0(dataMatrix, classLabels):
     m, n = dataMatrix.shape
     alpha = 0.01
@@ -66,6 +71,7 @@ def stocGradAscent0(dataMatrix, classLabels):
         weights = weights + alpha * error * dataMatrix[i]
     else:
         return weights
+
 
 def stocGradAscent1(dataMatrix, classLabels, numIter=150):
     m, n = dataMatrix.shape
@@ -82,9 +88,11 @@ def stocGradAscent1(dataMatrix, classLabels, numIter=150):
     else:
         return weights
 
+
 def classifyVector(inX, weights):
     prob = sigmoid(np.dot(inX, weights))
     return 1.0 if prob > 0.5 else 0.0
+
 
 def colicTest():
     trainingSet = list()
@@ -109,6 +117,7 @@ def colicTest():
     else:
         errorRate = errorCount / numTestVec
         return errorRate
+
 
 def multiTest():
     numTests, errorSum = 10, 0.0

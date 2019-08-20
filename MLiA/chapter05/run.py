@@ -2,6 +2,7 @@ import numpy as np
 
 from MLiA.chapter05 import logRegres
 
+
 def test0():
     print('#' * 64)
     dataArr, labelMat = logRegres.loadDataSet()
@@ -12,12 +13,14 @@ def test0():
     print('weights:\n{}'.format(weights))
     print('#' * 64)
 
+
 def test1():
     print('#' * 64)
     dataArr, labelMat = logRegres.loadDataSet()
     weights = logRegres.gradAscent(dataArr, labelMat)
     logRegres.plotBestFit(weights.getA())
     print('#' * 64)
+
 
 def test2():
     print('#' * 64)
@@ -26,6 +29,7 @@ def test2():
     logRegres.plotBestFit(weights)
     print('#' * 64)
 
+
 def test3():
     print('#' * 64)
     dataArr, labelMat = logRegres.loadDataSet()
@@ -33,10 +37,12 @@ def test3():
     logRegres.plotBestFit(weights)
     print('#' * 64)
 
+
 def test4():
     print('#' * 64)
     logRegres.multiTest()
     print('#' * 64)
+
 
 if __name__ == '__main__':
     test4()
