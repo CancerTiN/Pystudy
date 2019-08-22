@@ -9,5 +9,12 @@ def test0():
     print('#' * 64)
 
 
+def test1():
+    print('#' * 64)
+    dataArr, labelArr = svmMLiA.loadDataSet('testSet.txt')
+    svmMLiA.smoSimple(dataArr, labelArr)
+    print('#' * 64)
+
+
 if __name__ == '__main__':
-    test0()
+    test1()

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn import preprocessing
 
 X, y = list(), list()
 for line in open('data.txt'):
@@ -74,8 +75,106 @@ class Perceptron:
             #fig.canvas.draw_idle()
             plt.pause(0.1)
 
+class LinearSVM:
+    def __init__(self):
+        self._w = self._b = None
+
+    def fit(self, x, y, c=1, lr=0.01, batch_size=128, epoch=300, plot=True):
+        # plt.ion()
+        # fig = plt.figure()
+        # ax = fig.add_subplot(1, 1, 1)
+        # ax.set_ylim([-1, 6])
+        # ax.set_xlim([-1, 6])
+        # x1c_pos, x2c_pos, x1c_neg, x2c_neg = list(), list(), list(), list()
+        # for xcs, yc in zip(X, y):
+        #     if yc == 1:
+        #         x1c_pos.append(xcs[0])
+        #         x2c_pos.append(xcs[1])
+        #     else:
+        #         x1c_neg.append(xcs[0])
+        #         x2c_neg.append(xcs[1])
+        # else:
+        #     ax.scatter(x1c_pos, x2c_pos, c='red', marker='s')
+        #     ax.scatter(x1c_neg, x2c_neg, c='blue')
+
+        x, y = np.asarray(x, np.float32), np.asarray(y, np.float32)
+        batch_size = min(batch_size, len(y))
+        self._w = np.zeros(x.shape[1])
+        self._b = 0.
+        n = 1
+        if plot:
+            axis, labels = np.array(x).T, np.array(y)
+            decision_function = lambda xx: self.predict(xx)
+            nx, ny, padding = 400, 400, 0.2
+            x_min, x_max = np.min(axis[0]), np.max(axis[0])
+            y_min, y_max = np.min(axis[1]), np.max(axis[1])
+            x_padding = max(abs(x_min), abs(x_max)) * padding
+            y_padding = max(abs(y_min), abs(y_max)) * padding
+            x_min -= x_padding
+            x_max += x_padding
+            y_min -= y_padding
+            y_max += y_padding
+
+            def get_base(nx, ny):
+                xf = np.linspace(x_min, x_max, nx)
+                yf = np.linspace(y_min, y_max, ny)
+                n_xf, n_yf = np.meshgrid(xf, yf)
+                return xf, yf, np.c_[n_xf.ravel(), n_yf.ravel()]
+
+            plt.figure()
+
+
+        for _ in range(epoch):
+            self._w *= 1 - lr
+            batch = np.random.choice(len(x), batch_size)
+            x_batch, y_batch = x[batch], y[batch]
+
+            # 当分类正确时，L > 0
+            # 当分类错误时，L < 0
+            err = 1 - y_batch * self.predict(x_batch, True)
+            # L = y_batch * self.predict(x_batch, True)
+            # err = 1 - L
+            # 如果np.max(err)小于等于0，说明L的所有值都大于等于1，
+            # 说明batch向量的分类都正确，直接迭代到下一个循环
+            if np.max(err) <= 0:
+                continue
+            # mask为挑选出batch中分类错误的bool索引
+            mask = err > 0
+            delta = lr * c * y_batch[mask]
+            self._w += np.mean(delta[..., None] * x_batch[mask], axis=0)
+            self._b += np.mean(delta)
+
+            # x1p = np.arange(-1, 6, 0.1)
+            # x2p = (-self._b - self._w[0] * x1p) / self._w[1]
+            # try:
+            #     ax.lines.remove(lines[0])
+            # except Exception:
+            #     pass
+            # lines = ax.plot(x1p, x2p, c='black')
+            # plt.title(str(n))
+            # n += 1
+            # plt.pause(0.001)
+            if plot:
+                plt.clf()
+                plt.title(str(_))
+                plt.scatter(axis[0], axis[1], c=labels)
+                plt.xlim(x_min, x_max)
+                plt.ylim(y_min, y_max)
+                xf, yf, base_matrix = get_base(nx, ny)
+                z = decision_function(base_matrix).reshape((nx, ny))
+                plt.contour(xf, yf, z, levels=[0])
+                plt.pause(0.01)
+
+    def predict(self, x, raw=False):
+        x = np.asarray(x, np.float32)
+        y_pred = x.dot(self._w) + self._b
+        if raw:
+            return y_pred
+        return np.sign(y_pred).astype(np.float32)
+
 
 if __name__ == '__main__':
-    inst = Perceptron()
+    # inst = Perceptron()
+    inst = LinearSVM()
     inst.fit(X, y)
     plt.waitforbuttonpress()
