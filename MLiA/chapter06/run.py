@@ -12,7 +12,9 @@ def test0():
 def test1():
     print('#' * 64)
     dataArr, labelArr = svmMLiA.loadDataSet('testSet.txt')
-    svmMLiA.smoSimple(dataArr, labelArr)
+    b, alphas = svmMLiA.smoSimple(dataArr, labelArr)
+    print('b: {}'.format(b))
+    print('alphas: {}'.format(alphas))
     print('#' * 64)
 
 
