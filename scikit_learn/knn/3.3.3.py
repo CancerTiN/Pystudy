@@ -2,12 +2,14 @@
 # __author__ = 'qinjincheng'
 
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import LabelBinarizer
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import f1_score
+from sklearn.metrics import matthews_corrcoef
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import LabelBinarizer
 
 X_train = np.array([
     [158, 64],
@@ -54,3 +56,10 @@ Precision = precision_score(y_test_binarized, predictions_binarized)
 print('precision: {}'.format(Precision))
 Recall = recall_score(y_test_binarized, predictions_binarized)
 print('recall: {}'.format(Recall))
+F1Score = f1_score(y_test_binarized, predictions_binarized)
+print('f1 score: {}'.format(F1Score))
+MatthewsCorrcoef = matthews_corrcoef(y_test_binarized, predictions_binarized)
+print('matthews correlation coefficient: {}'.format(MatthewsCorrcoef))
+ClassificationReport = classification_report(y_test_binarized, predictions_binarized, target_names=['female', 'male'],
+                                             labels=[0, 1])
+print('classification report:\n{}'.format(ClassificationReport))
