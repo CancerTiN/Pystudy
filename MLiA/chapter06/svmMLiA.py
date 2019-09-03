@@ -167,3 +167,37 @@ def plotSuportVecter(dataMatIn, classLabels, alphas, b, k=3):
         plt.gca().add_patch(circle)
     else:
         plt.waitforbuttonpress()
+
+class optStruct:
+    def __init__(self, dataMatIn, classLabels, C, toler):
+        self.X = dataMatIn
+        self.labelMat = classLabels
+        self.C = C
+        self.tol = toler
+        self.m = dataMatIn.shape[0]
+        self.alphas = np.mat(np.zeros((self.m, 1)))
+        self.b = 0
+        self.eCache = np.mat(np.zeros((self.m, 2)))
+
+def calcEk(oS: optStruct, k: int):
+    fXk = np.dot(np.multiply(oS.alphas, oS.labelMat).T, oS.X) * oS.X[k,:].T + oS.b
+    Ek = fXk - oS.labelMat[k]
+    return float(Ek)
+
+def selectJ(i:int, oS:optStruct, Ei:float):
+    maxK, maxDeltaE, Ej = -1, 0, 0
+    oS.eCache[i] = [1, Ei]
+    validEcacheList = np.nonzero(oS.eCache[:,0].A)[0]
+    if len(validEcacheList) > 1:
+        for k in validEcacheList:
+            if k != i:
+                Ek = calcEk(oS, k)
+                deltaE = abs(Ei - Ek)
+                if deltaE > maxDeltaE:
+                    maxK, maxDeltaE, Ej = k, deltaE, Ek
+        else:
+            j = maxK
+    else:
+        j = selectJrand(i, oS.m)
+        Ej = calcEk(oS, k)
+    return j, Ej
