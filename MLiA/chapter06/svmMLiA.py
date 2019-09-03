@@ -1,5 +1,8 @@
 import random
+
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 def loadDataSet(filename):
@@ -27,19 +30,35 @@ def clipAlpha(aj, H, L):
     return aj
 
 
-def smoSimple(dataMatIn, classLabels, C=0.6, toler=0.001, maxIter=1):
+def smoSimple(dataMatIn, classLabels, C=0.6, toler=0.001, maxIter=60, bChangeRate=0.25):
     dataMatrix = np.mat(dataMatIn)
     labelMat = np.mat(classLabels).transpose()
     b = 0
     m, n = np.shape(dataMatrix)
-    alphas = np.mat(np.zeros((m, 1)))
+    alphas = np.mat(np.random.rand(m, 1))
+    alphas[alphas > C] = 0
+    # alphas = np.mat(np.zeros((m, 1)))
+    count = 0
     iter = 0
+
+    x1cord0, x2cord0, x1cord1, x2cord1 = list(), list(), list(), list()
+    for row, label in zip(dataMatrix, labelMat):
+        x1Pt, x2Pt = row.getA1()
+        if label == -1:
+            x1cord0.append(x1Pt)
+            x2cord0.append(x2Pt)
+        elif label == 1:
+            x1cord1.append(x1Pt)
+            x2cord1.append(x2Pt)
+    plt.figure()
+
     while iter < maxIter:
+        maxSum = 0
         alphasPairsChanged = 0
         for i in range(m):
             lMat = np.multiply(alphas, labelMat).T
             wMat = np.dot(lMat, dataMatrix)
-            xiMat = dataMatrix[i,:]
+            xiMat = dataMatrix[i, :]
             wXi = np.dot(wMat, xiMat.T)
             fXi = wXi - b
             Ei = fXi - labelMat[i]
@@ -55,7 +74,7 @@ def smoSimple(dataMatIn, classLabels, C=0.6, toler=0.001, maxIter=1):
             cond2 = labelMat[i] * Ei > +toler and alphas[i] > 0
             if cond1 or cond2:
                 j = selectJrand(i, m)
-                xjMat = dataMatrix[j,:]
+                xjMat = dataMatrix[j, :]
                 wXj = np.dot(wMat, xjMat.T)
                 fXj = wXj - b
                 Ej = fXj - labelMat[j]
@@ -73,27 +92,78 @@ def smoSimple(dataMatIn, classLabels, C=0.6, toler=0.001, maxIter=1):
                 euclDist = np.dot(coorDiff, coorDiff.T)
                 if euclDist == 0:
                     continue
-                ajNew = ajOld + (labelMat[i] * Ei - labelMat[j] * Ej) / euclDist
+                ajNew = ajOld + (labelMat[j] * Ei - labelMat[j] * Ej) / euclDist
                 ajNew = clipAlpha(ajNew, H, L)
-                if abs(ajNew - ajOld) < 1e-5:
-                    alphas[j] = ajNew
-                    continue
                 aiNew = aiOld + labelMat[i] * labelMat[j] * (ajOld - ajNew)
+                if abs(ajNew - ajOld) < 1e-5:
+                    continue
+                alphas[j] = ajNew
                 alphas[i] = aiNew
-                wMat = np.dot(np.multiply(alphas, labelMat).T, dataMatrix)
                 bi = labelMat[i] - np.dot(wMat, xiMat.T)
                 bj = labelMat[j] - np.dot(wMat, xjMat.T)
                 if 0 < alphas[i] < C and 0 < alphas[j] < C:
-                    b = np.mean(bi, bj)
+                    bTar = np.mean((bi, bj))
                 elif 0 < alphas[i] < C:
-                    b = bi
+                    bTar = float(bi)
                 elif 0 < alphas[j] < C:
-                    b = bj
+                    bTar = float(bj)
                 else:
-                    b = np.mean(bi, bj)
+                    bTar = np.mean((bi, bj))
+                b = b + (bTar - b) * bChangeRate
                 alphasPairsChanged += 1
         if alphasPairsChanged == 0:
             iter += 1
         else:
             iter = 0
+
+        w1, w2 = np.dot(np.multiply(alphas, labelMat).T, dataMatrix).getA1()
+        x1tarr = np.arange(-4, 14, 0.1)
+        x2tarr = (-w1 * x1tarr - b) / w2
+
+        plt.clf()
+        plt.title('{}-{}'.format(count, iter))
+        plt.axis([-4, 14, -10, 8])
+        plt.scatter(x1cord0, x2cord0, marker='s', s=90, c='blue')
+        plt.scatter(x1cord1, x2cord1, marker='o', s=60, c='red')
+        plt.plot(x1tarr, x2tarr, c='black')
+        plt.pause(0.01)
+
+        count += 1
+
+    plt.waitforbuttonpress()
+    plt.close()
     return b, alphas
+
+
+def plotSuportVecter(dataMatIn, classLabels, alphas, b, k=3):
+    dataMatrix = np.mat(dataMatIn)
+    labelMat = np.mat(classLabels).transpose()
+    w1, w2 = np.dot(np.multiply(alphas, labelMat).T, dataMatrix).getA1()
+    x1cord0, x2cord0, x1cord1, x2cord1 = list(), list(), list(), list()
+    cord2distList = list()
+    for row, label in zip(dataMatrix, labelMat):
+        x1Pt, x2Pt = row.getA1()
+        if label == -1:
+            x1cord0.append(x1Pt)
+            x2cord0.append(x2Pt)
+        elif label == 1:
+            x1cord1.append(x1Pt)
+            x2cord1.append(x2Pt)
+        dist = label * (w1 * x1Pt + w2 * x2Pt + b)
+        cord2distList.append([(x1Pt, x2Pt), dist])
+    else:
+        cord2distDF = pd.DataFrame(cord2distList)
+        svCordList = cord2distDF.sort_values(1).head(k)[0].to_list()
+    x1tarr = np.arange(-4, 14, 0.1)
+    x2tarr = (-w1 * x1tarr - b) / w2
+
+    plt.figure()
+    plt.axis([-4, 14, -10, 8])
+    plt.scatter(x1cord0, x2cord0, marker='s', s=90, c='blue')
+    plt.scatter(x1cord1, x2cord1, marker='o', s=60, c='red')
+    plt.plot(x1tarr, x2tarr, c='black')
+    for svCord in svCordList:
+        circle = plt.Circle(svCord, 0.5, facecolor='none', edgecolor=(0, 0.8, 0.8), linewidth=3, alpha=0.5)
+        plt.gca().add_patch(circle)
+    else:
+        plt.waitforbuttonpress()
