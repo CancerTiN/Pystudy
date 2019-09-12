@@ -201,3 +201,28 @@ def selectJ(i:int, oS:optStruct, Ei:float):
         j = selectJrand(i, oS.m)
         Ej = calcEk(oS, k)
     return j, Ej
+
+def updateEk(oS:optStruct, k:int):
+    Ek = calcEk(oS, k)
+    oS.eCache[k] = [1, Ek]
+
+def innerL(i, oS):
+    Ei = calcEk(oS, i)
+
+
+
+def smoP(dataMatIn, classLabels, C, toler, maxIter, kTup=('lin', 0)):
+    dataMatIn = np.mat(dataMatIn)
+    classLabels = np.mat(classLabels).transpose()
+    oS = optStruct(dataMatIn, classLabels, C, toler)
+    iter = 0
+    entireSet = True
+    alphaPairsChanged = 0
+    while iter < maxIter and (alphaPairsChanged > 0 or entireSet):
+        alphaPairsChanged = 0
+        if entireSet:
+            for i in range(oS.m):
+                alphaPairsChanged += innerL(i, oS)
+
+
+
