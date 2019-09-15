@@ -168,6 +168,7 @@ def plotSuportVecter(dataMatIn, classLabels, alphas, b, k=3):
     else:
         plt.waitforbuttonpress()
 
+
 class optStruct:
     def __init__(self, dataMatIn, classLabels, C, toler):
         self.X = dataMatIn
@@ -179,15 +180,26 @@ class optStruct:
         self.b = 0
         self.eCache = np.mat(np.zeros((self.m, 2)))
 
+    def pickLH(self, i: int, j: int):
+        if self.labelMat[i] != self.labelMat[j]:
+            L = max(0, self.alphas[j] - self.alphas[i])
+            H = min(self.C, self.C + self.alphas[j] - self.alphas[i])
+        else:
+            L = max(0, self.alphas[j] + self.alphas[i] - self.C)
+            H = min(self.C, self.alphas[j] + self.alphas[i])
+        return L, H
+
+
 def calcEk(oS: optStruct, k: int):
-    fXk = np.dot(np.multiply(oS.alphas, oS.labelMat).T, oS.X) * oS.X[k,:].T + oS.b
+    fXk = np.dot(np.multiply(oS.alphas, oS.labelMat).T, oS.X) * oS.X[k, :].T + oS.b
     Ek = fXk - oS.labelMat[k]
     return float(Ek)
 
-def selectJ(i:int, oS:optStruct, Ei:float):
+
+def selectJ(i: int, oS: optStruct, Ei: float):
     maxK, maxDeltaE, Ej = -1, 0, 0
     oS.eCache[i] = [1, Ei]
-    validEcacheList = np.nonzero(oS.eCache[:,0].A)[0]
+    validEcacheList = np.nonzero(oS.eCache[:, 0].A)[0]
     if len(validEcacheList) > 1:
         for k in validEcacheList:
             if k != i:
@@ -199,16 +211,49 @@ def selectJ(i:int, oS:optStruct, Ei:float):
             j = maxK
     else:
         j = selectJrand(i, oS.m)
-        Ej = calcEk(oS, k)
+        Ej = calcEk(oS, j)
     return j, Ej
 
-def updateEk(oS:optStruct, k:int):
+
+def updateEk(oS: optStruct, k: int):
     Ek = calcEk(oS, k)
     oS.eCache[k] = [1, Ek]
 
-def innerL(i, oS):
-    Ei = calcEk(oS, i)
 
+def innerL(i: int, oS: optStruct):
+    Ei = calcEk(oS, i)
+    cond1 = oS.labelMat[i] * Ei < -oS.tol and oS.alphas[i] < oS.C
+    cond2 = oS.labelMat[i] * Ei > +oS.tol and oS.alphas[i] > 0
+    if cond1 or cond2:
+        j, Ej = selectJ(i, oS, Ei)
+        alphaIold = oS.alphas[i].copy()
+        alphaJold = oS.alphas[j].copy()
+        L, H = oS.pickLH(i, j)
+        if L == H:
+            return 0
+        eta = 2.0 * oS.X[i, :] * oS.X[j, :].T - oS.X[i, :] * oS.X[i, :].T - oS.X[j, :] * oS.X[j, :].T
+        if eta >= 0:
+            return 0
+        oS.alphas[j] -= oS.labelMat[j] * (Ei - Ej) / eta
+        oS.alphas[j] = clipAlpha(oS.alphas[j], H, L)
+        updateEk(oS, j)
+        if abs(oS.alphas[j] - alphaJold) < 1e-5:
+            return 0
+        oS.alphas[i] += oS.labelMat[j] * oS.labelMat[i] * (alphaJold - oS.alphas[j])
+        updateEk(oS, i)
+        b1 = oS.b - Ei - oS.labelMat[i] * (oS.alphas[i] - alphaIold) * oS.X[i, :] * oS.X[i, :].T - \
+             oS.labelMat[j] * (oS.alphas[j] - alphaJold) * oS.X[i, :] * oS.X[j, :].T
+        b2 = oS.b - Ej - oS.labelMat[i] * (oS.alphas[i] - alphaIold) * oS.X[i, :] * oS.X[j, :].T - \
+             oS.labelMat[j] * (oS.alphas[j] - alphaJold) * oS.X[j, :] * oS.X[j, :].T
+        if 0 < oS.alphas[i] < oS.C:
+            oS.b = b1
+        elif 0 < oS.alphas[j] < oS.C:
+            oS.b = b2
+        else:
+            oS.b = (b1 + b2) / 2.0
+        return 1
+    else:
+        return 0
 
 
 def smoP(dataMatIn, classLabels, C, toler, maxIter, kTup=('lin', 0)):
@@ -218,11 +263,84 @@ def smoP(dataMatIn, classLabels, C, toler, maxIter, kTup=('lin', 0)):
     iter = 0
     entireSet = True
     alphaPairsChanged = 0
+
+    x1cord0, x2cord0, x1cord1, x2cord1 = list(), list(), list(), list()
+    for row, label in zip(dataMatIn, classLabels):
+        x1Pt, x2Pt = row.getA1()
+        if label == -1:
+            x1cord0.append(x1Pt)
+            x2cord0.append(x2Pt)
+        elif label == 1:
+            x1cord1.append(x1Pt)
+            x2cord1.append(x2Pt)
+    plt.figure()
+
     while iter < maxIter and (alphaPairsChanged > 0 or entireSet):
         alphaPairsChanged = 0
         if entireSet:
             for i in range(oS.m):
                 alphaPairsChanged += innerL(i, oS)
+                print('full-set, iter: {} i: {}, pairs changed: {}'.format(iter, i, alphaPairsChanged))
+
+                w1, w2 = np.dot(np.multiply(oS.alphas, oS.labelMat).T, oS.X).getA1()
+                x1tarr = np.arange(-4, 14, 0.1)
+                x2tarr = (-w1 * x1tarr - float(oS.b)) / w2
+
+                plt.clf()
+                plt.title('{}-{}'.format(iter, i))
+                plt.axis([-4, 14, -10, 8])
+                plt.scatter(x1cord0, x2cord0, marker='s', s=90, c='blue')
+                plt.scatter(x1cord1, x2cord1, marker='o', s=60, c='red')
+                plt.plot(x1tarr, x2tarr, c='black')
+                plt.pause(0.01)
+
+            else:
+                iter += 1
+        else:
+            nonBoundIs = np.nonzero((oS.alphas.A > 0) * (oS.alphas.A < C))[0]
+            for i in nonBoundIs:
+                alphaPairsChanged += innerL(i, oS)
+                print('non-bound, iter: {} i: {}, pairs changed: {}'.format(iter, i, alphaPairsChanged))
+
+                w1, w2 = np.dot(np.multiply(oS.alphas, oS.labelMat).T, oS.X).getA1()
+                x1tarr = np.arange(-4, 14, 0.1)
+                x2tarr = (-w1 * x1tarr - float(oS.b)) / w2
+
+                plt.clf()
+                plt.title('{}-{}'.format(iter, i))
+                plt.axis([-4, 14, -10, 8])
+                plt.scatter(x1cord0, x2cord0, marker='s', s=90, c='blue')
+                plt.scatter(x1cord1, x2cord1, marker='o', s=60, c='red')
+                plt.plot(x1tarr, x2tarr, c='black')
+                plt.pause(0.01)
+
+            else:
+                iter += 1
+        if entireSet:
+            entireSet = False
+        elif alphaPairsChanged == 0:
+            entireSet = True
+        print('iteration number: {}'.format(iter))
+
+    plt.waitforbuttonpress()
+    plt.close()
+
+    return oS.b, oS.alphas
 
 
+def calcWs(alphas, dataArr, classLabels):
+    labelMat = np.mat(classLabels).transpose()
+    return np.dot(np.multiply(alphas, labelMat).T, dataArr).T
 
+
+def evalParams(dataArr, labelArr, ws, b):
+    datMat = np.mat(dataArr)
+    m, n = datMat.shape
+    b = float(b)
+    correctCount = 0.0
+    for i in range(m):
+        y_pred = datMat[i] * ws + b
+        if np.sign(y_pred) == labelArr[i]:
+            correctCount += 1
+    else:
+        return correctCount, correctCount / m
