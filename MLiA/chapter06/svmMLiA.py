@@ -1,3 +1,4 @@
+import os
 import random
 
 import matplotlib.pyplot as plt
@@ -190,8 +191,11 @@ class optStruct:
         return L, H
 
 
-def calcEk(oS: optStruct, k: int):
-    fXk = np.dot(np.multiply(oS.alphas, oS.labelMat).T, oS.X) * oS.X[k, :].T + oS.b
+def calcEk(oS, k: int):
+    if isinstance(oS, optStruct):
+        fXk = np.dot(np.multiply(oS.alphas, oS.labelMat).T, oS.X) * oS.X[k, :].T + oS.b
+    elif isinstance(oS, optStructK):
+        fXk = np.dot(np.multiply(oS.alphas, oS.labelMat).T, oS.K[:,k]) + oS.b
     Ek = fXk - oS.labelMat[k]
     return float(Ek)
 
@@ -344,3 +348,196 @@ def evalParams(dataArr, labelArr, ws, b):
             correctCount += 1
     else:
         return correctCount, correctCount / m
+
+def kernelTrans(X: np.matrix, A: np.matrix, kTup: tuple):
+    m, n = X.shape
+    K = np.mat(np.zeros((m, 1)))
+    if kTup[0] == 'lin':
+        K = X *A.T
+    elif kTup[0] == 'rbf':
+        for j in range(m):
+            deltaRow = X[j,:] - A
+            K[j] = deltaRow * deltaRow.T
+        else:
+            K = np.exp(K/(-1*kTup[1]**2))
+    return K
+
+class optStructK:
+    def __init__(self, dataMatIn, classLabels, C, toler, kTup):
+        self.X = dataMatIn
+        self.labelMat = classLabels
+        self.C = C
+        self.tol = toler
+        self.m = dataMatIn.shape[0]
+        self.alphas = np.mat(np.zeros((self.m, 1)))
+        self.b = 0
+        self.eCache = np.mat(np.zeros((self.m, 2)))
+        self.K = self.transform(kTup)
+
+    def transform(self, kTup):
+        K = np.mat(np.zeros((self.m, self.m)))
+        for i in range(self.m):
+            K[:,i] = kernelTrans(self.X, self.X[i,:], kTup)
+        else:
+            return K
+
+    def pickLH(self, i: int, j: int):
+        if self.labelMat[i] != self.labelMat[j]:
+            L = max(0, self.alphas[j] - self.alphas[i])
+            H = min(self.C, self.C + self.alphas[j] - self.alphas[i])
+        else:
+            L = max(0, self.alphas[j] + self.alphas[i] - self.C)
+            H = min(self.C, self.alphas[j] + self.alphas[i])
+        return L, H
+
+def innerK(i: int, oS: optStructK):
+    Ei = calcEk(oS, i)
+    cond1 = oS.labelMat[i] * Ei < -oS.tol and oS.alphas[i] < oS.C
+    cond2 = oS.labelMat[i] * Ei > +oS.tol and oS.alphas[i] > 0
+    if cond1 or cond2:
+        j, Ej = selectJ(i, oS, Ei)
+        alphaIold = oS.alphas[i].copy()
+        alphaJold = oS.alphas[j].copy()
+        L, H = oS.pickLH(i, j)
+        if L == H:
+            return 0
+        eta = 2.0 * oS.K[i, j] - oS.K[i, i] - oS.K[j, j]
+        if eta >= 0:
+            return 0
+        oS.alphas[j] -= oS.labelMat[j] * (Ei - Ej) / eta
+        oS.alphas[j] = clipAlpha(oS.alphas[j], H, L)
+        updateEk(oS, j)
+        if abs(oS.alphas[j] - alphaJold) < 1e-5:
+            return 0
+        oS.alphas[i] += oS.labelMat[j] * oS.labelMat[i] * (alphaJold - oS.alphas[j])
+        updateEk(oS, i)
+        b1 = oS.b - Ei - oS.labelMat[i] * (oS.alphas[i] - alphaIold) * oS.K[i, i] - \
+             oS.labelMat[j] * (oS.alphas[j] - alphaJold) * oS.K[i, j]
+        b2 = oS.b - Ej - oS.labelMat[i] * (oS.alphas[i] - alphaIold) * oS.K[i, j] - \
+             oS.labelMat[j] * (oS.alphas[j] - alphaJold) * oS.K[j, j]
+        if 0 < oS.alphas[i] < oS.C:
+            oS.b = b1
+        elif 0 < oS.alphas[j] < oS.C:
+            oS.b = b2
+        else:
+            oS.b = (b1 + b2) / 2.0
+        return 1
+    else:
+        return 0
+
+def smoPK(dataMatIn, classLabels, C, toler, maxIter, kTup=('lin', 0)):
+    dataMatIn = np.mat(dataMatIn)
+    classLabels = np.mat(classLabels).transpose()
+    oS = optStructK(dataMatIn, classLabels, C, toler, kTup)
+    iter = 0
+    entireSet = True
+    alphaPairsChanged = 0
+    while iter < maxIter and (alphaPairsChanged > 0 or entireSet):
+        alphaPairsChanged = 0
+        if entireSet:
+            for i in range(oS.m):
+                alphaPairsChanged += innerL(i, oS)
+                print('full-set, iter: {} i: {}, pairs changed: {}'.format(iter, i, alphaPairsChanged))
+            else:
+                iter += 1
+        else:
+            nonBoundIs = np.nonzero((oS.alphas.A > 0) * (oS.alphas.A < C))[0]
+            for i in nonBoundIs:
+                alphaPairsChanged += innerL(i, oS)
+                print('non-bound, iter: {} i: {}, pairs changed: {}'.format(iter, i, alphaPairsChanged))
+            else:
+                iter += 1
+        if entireSet:
+            entireSet = False
+        elif alphaPairsChanged == 0:
+            entireSet = True
+        print('iteration number: {}'.format(iter))
+    return oS.b, oS.alphas
+
+def testRbf(k1=1.3):
+    kTup = ('rbf', k1)
+    dataArr, labelArr = loadDataSet('testSetRBF.txt')
+    b, alphas = smoPK(dataArr, labelArr, 200, 1e-4, 10000, kTup)
+    datMat = np.mat(dataArr)
+    labelMat = np.mat(labelArr).transpose()
+    svInd = np.nonzero(alphas.A > 0)[0]
+    sVs = datMat[svInd]
+    labelSV = labelMat[svInd]
+    print('there are {} support vectors'.format(sVs.shape[0]))
+    m, n = datMat.shape
+    errorCount = 0
+    for i in range(m):
+        kernelEval = kernelTrans(sVs, datMat[i,:], kTup)
+        predict = float(kernelEval.T * np.multiply(labelSV, alphas[svInd]) + b)
+        if np.sign(predict) != np.sign(labelArr[i]):
+            errorCount += 1
+    else:
+        print('the training error rate is {}'.format(errorCount / m))
+    dataArr2, labelArr2 = loadDataSet('testSetRBF2.txt')
+    datMat2 = np.mat(dataArr2)
+    labelMat2 = np.mat(labelArr2).transpose()
+    m2, n2 = datMat2.shape
+    errorCount2 = 0
+    for j in range(m2):
+        kernelEval2 = kernelTrans(sVs, datMat2[j, :], kTup)
+        predict2 = float(kernelEval2.T * np.multiply(labelSV, alphas[svInd]) + b)
+        if np.sign(predict2) != np.sign(labelArr[j]):
+            errorCount2 += 1
+    else:
+        print('the test error rate is {}'.format(errorCount / m2))
+
+def img2vector(filename):
+    dataList = list()
+    for line in open(filename):
+        dataList.extend(map(int, list(line.strip())))
+    else:
+        return np.array(dataList)
+
+def loadImages(dirname):
+    hwLabels = list()
+    trainningFileList = os.listdir(dirname)
+    m = len(trainningFileList)
+    trainingMat = np.zeros((m, 1024))
+    for i in range(m):
+        filename = trainningFileList[i]
+        classNum = int(filename.split('_')[0])
+        if classNum == 9:
+            hwLabels.append(-1)
+        else:
+            hwLabels.append(1)
+        trainingMat[i,:] = img2vector(os.path.join(dirname, filename))
+    else:
+        return trainingMat, hwLabels
+
+def testDigits(trainingDataDir, testDataDir, kTup=('rbf', 10)):
+    dataArr, labelArr = loadImages(trainingDataDir)
+    print('succeed in loading images from {}'.format(trainingDataDir))
+    b, alphas = smoPK(dataArr, labelArr, 200, 0.0001, 10000, kTup)
+    datMat = np.mat(dataArr)
+    labelMat = np.mat(labelArr).transpose()
+    svInd = np.nonzero(alphas.A > 0)[0]
+    sVs = datMat[svInd]
+    labelSV = labelMat[svInd]
+    print('there are {} support vectors'.format(sVs.shape[0]))
+    m, n = datMat.shape
+    errorCount = 0
+    for i in range(m):
+        kernelEval = kernelTrans(sVs, datMat[i,:], kTup)
+        predict = float(kernelEval.T * np.multiply(labelSV, alphas[svInd]) + b)
+        if np.sign(predict) != np.sign(labelArr[i]):
+            errorCount += 1
+    else:
+        print('the training error rate is {}'.format(errorCount / m))
+    dataArr2, labelArr2 = loadImages(testDataDir)
+    print('succeed in loading images from {}'.format(testDataDir))
+    datMat2 = np.mat(dataArr2)
+    labelMat2 = np.mat(labelArr2).transpose()
+    m2, n2 = datMat2.shape
+    errorCount2 = 0
+    for j in range(m2):
+        kernelEval2 = kernelTrans(sVs, datMat2[j,:], kTup)
+        predict2 = float(kernelEval2.T * np.multiply(labelSV, alphas[svInd]) + b)
+        if np.sign(predict2) != np.sign(labelArr2[j]):
+            errorCount2 += 1
+    else:
+        print('the test error rate is {}'.format(errorCount2 / m2))

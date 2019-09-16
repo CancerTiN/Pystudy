@@ -53,6 +53,19 @@ def test3():
     print('accuracy: {}'.format(accuracy))
     print('#' * 64)
 
+def test4():
+    print('#' * 64)
+    svmMLiA.testRbf()
+    print('#' * 64)
+    svmMLiA.testRbf(0.1)
+    print('#' * 64)
+
+def test5():
+    print('#' * 64)
+    trainingDataDir = 'D:/Workspace/Study/MLiA/chapter02/trainingDigits'
+    testDataDir = 'D:/Workspace/Study/MLiA/chapter02/testDigits'
+    svmMLiA.testDigits(trainingDataDir, testDataDir)
+    print('#' * 64)
 
 if __name__ == '__main__':
-    test3()
+    test5()
