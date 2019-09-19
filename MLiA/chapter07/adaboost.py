@@ -40,8 +40,8 @@ def buildStump(dataArr, classLabels, D):
                 errArr = np.mat(np.ones((m, 1)))
                 errArr[predictedVals == labelMat] = 0
                 weightedError = float(D.T * errArr)
-                print('dim: {}, thresh: {}, ineqal: {}, weighted error: {}'.format(
-                    i, threshVal, inequal, weightedError))
+                # print('dim: {}, thresh: {}, ineqal: {}, weighted error: {}'.format(
+                #     i, threshVal, inequal, weightedError))
                 if weightedError < minError:
                     minError = weightedError
                     bestClasEst = predictedVals.copy()
@@ -50,3 +50,42 @@ def buildStump(dataArr, classLabels, D):
                     bestStump['ineq'] = inequal
     else:
         return bestStump, minError, bestClasEst
+
+def adaBoostTrainDS(dataMatrix, classLabels, numIt=40):
+    weekClassArr = list()
+    m, n = np.shape(dataMatrix)
+    D = np.mat(np.ones((m, 1)) / m)
+    aggClassEst = np.mat(np.zeros((m, 1)))
+    for i in range(numIt):
+        print('D: {}'.format(D))
+        bestStump, error, classEst = buildStump(dataMatrix, classLabels, D)
+        print('error: {}'.format(error))
+        alpha = 0.5 * np.log((1 - error)/ max(error, 1e-16))
+        bestStump['alpha'] = alpha
+        weekClassArr.append(bestStump)
+        print('bestStump: {}'.format(bestStump))
+        print('classEst: {}'.format(classEst))
+        expon = np.multiply(-alpha * np.mat(classLabels).T, classEst)
+        print('expon: {}'.format(expon))
+        D = np.multiply(D, np.exp(expon))
+        D = D / D.sum()
+        aggClassEst += alpha * classEst
+        print('aggClassEst: {}'.format(aggClassEst))
+        aggErrors = np.multiply(np.sign(aggClassEst) != np.mat(classLabels).T, np.ones((m, 1)))
+        errorRate = aggErrors.sum() / m
+        print('errorRate: {}'.format(errorRate))
+        if not errorRate:
+            break
+    return weekClassArr
+
+
+def adaClassify(datToClass, classifierArr):
+    dataMatrix = np.mat(datToClass)
+    m, n = dataMatrix.shape
+    aggClassEst = np.mat(np.zeros((m, 1)))
+    for stump in classifierArr:
+        classEst = stumpClassify(dataMatrix, stump['dim'], stump['thresh'], stump['ineq'])
+        aggClassEst += stump['alpha'] * classEst
+        print('aggClassEst: {}'.format(aggClassEst))
+    else:
+        return np.sign(aggClassEst)

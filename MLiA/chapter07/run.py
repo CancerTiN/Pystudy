@@ -19,5 +19,32 @@ def test0():
     print('#' * 64)
 
 
+def test1():
+    print('#' * 64)
+    dataMatrix, classLabels = adaboost.loadSimpData()
+    print('dataMatrix: {}'.format(dataMatrix))
+    print('classLabels: {}'.format(classLabels))
+    print('#' * 64)
+    classifierArray = adaboost.adaBoostTrainDS(dataMatrix, classLabels)
+    print('classifierArray: {}'.format(classifierArray))
+    print('#' * 64)
+
+
+def test2():
+    print('#' * 64)
+    dataMatrix, classLabels = adaboost.loadSimpData()
+    print('dataMatrix: {}'.format(dataMatrix))
+    print('classLabels: {}'.format(classLabels))
+    print('#' * 64)
+    classifierArray = adaboost.adaBoostTrainDS(dataMatrix, classLabels)
+    print('classifierArray: {}'.format(classifierArray))
+    print('#' * 64)
+    testData = [[5, 5], [1.1, 1.1], [1.1, 1], [1, 1],[0, 0]]
+    print('testData: {}'.format(testData))
+    testPred = adaboost.adaClassify(testData, classifierArray)
+    print('testPred: {}'.format(testPred))
+    print('#' * 64)
+
+
 if __name__ == '__main__':
-    test0()
+    test2()
