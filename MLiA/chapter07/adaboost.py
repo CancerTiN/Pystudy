@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -51,6 +52,7 @@ def buildStump(dataArr, classLabels, D):
     else:
         return bestStump, minError, bestClasEst
 
+
 def adaBoostTrainDS(dataMatrix, classLabels, numIt=40):
     weekClassArr = list()
     m, n = np.shape(dataMatrix)
@@ -60,7 +62,7 @@ def adaBoostTrainDS(dataMatrix, classLabels, numIt=40):
         print('D: {}'.format(D))
         bestStump, error, classEst = buildStump(dataMatrix, classLabels, D)
         print('error: {}'.format(error))
-        alpha = 0.5 * np.log((1 - error)/ max(error, 1e-16))
+        alpha = 0.5 * np.log((1 - error) / max(error, 1e-16))
         bestStump['alpha'] = alpha
         weekClassArr.append(bestStump)
         print('bestStump: {}'.format(bestStump))
@@ -76,7 +78,7 @@ def adaBoostTrainDS(dataMatrix, classLabels, numIt=40):
         print('errorRate: {}'.format(errorRate))
         if not errorRate:
             break
-    return weekClassArr
+    return weekClassArr, aggClassEst
 
 
 def adaClassify(datToClass, classifierArr):
@@ -89,3 +91,48 @@ def adaClassify(datToClass, classifierArr):
         print('aggClassEst: {}'.format(aggClassEst))
     else:
         return np.sign(aggClassEst)
+
+
+def loadDataSet(fileName):
+    dataArr, labelArr = list(), list()
+    for line in open(fileName):
+        curLine = line.strip().split('\t')
+        dataArr.append(list(map(float, curLine[:-1])))
+        labelArr.append(float(curLine[-1]))
+    else:
+        return dataArr, labelArr
+
+
+def plotROC(predStrengths, classLabels):
+    cur = 1.0, 1.0
+    ySum = 0.0
+    numPosClas = sum(np.array(classLabels) == 1.0)
+    numNegClas = sum(np.array(classLabels) != 1.0)
+    yStep = 1 / numPosClas
+    xStep = 1 / numNegClas
+    sortedIndicies = predStrengths.argsort()
+    print('numPosClas: {}'.format(numPosClas))
+    print('numNegClas: {}'.format(numNegClas))
+    print('yStep: {}'.format(yStep))
+    print('xStep: {}'.format(xStep))
+    fig = plt.figure()
+    fig.clf()
+    ax = plt.subplot(111)
+    for i in sortedIndicies.getA1():
+        if classLabels[i] == 1.0:
+            delX, delY = 0, yStep
+        else:
+            delX, delY = xStep, 0
+            ySum += cur[1]
+        xOld, xNew = cur[0], cur[0] - delX
+        yOld, yNew = cur[1], cur[1] - delY
+        cur = xNew, yNew
+        ax.plot([xOld, xNew], [yOld, yNew], c='b')
+    else:
+        ax.plot([0, 1], [0, 1], 'b--')
+        ax.axis([0, 1, 0, 1])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('ROC curve for AdaBoost Horse Colic Detection System')
+        plt.show()
+    print('the Area Under the Curve is {}'.format(ySum * xStep))
