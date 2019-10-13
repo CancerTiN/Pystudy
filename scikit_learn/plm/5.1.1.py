@@ -19,3 +19,6 @@ beta = np.dot(
 )
 
 print('beta: {}'.format(beta))
+
+ret = np.linalg.lstsq(X, y)
+print('lstsq return: {}'.format(ret))
