@@ -45,3 +45,65 @@ def lwlrTest(testArr, xArr, yArr, k=1.0):
         yHat[i] = lwlr(testArr[i], xArr, yArr, k)
     else:
         return yHat
+
+
+def rssError(yArr, yHatArr):
+    return ((yArr - yHatArr) ** 2).sum()
+
+
+def ridgeRegress(xMat, yMat, lam=0.2):
+    n, m = np.shape(xMat)
+    xTx = xMat.T * xMat
+    denom = xTx + np.eye(m) * lam
+    if np.linalg.det(denom) == 0.0:
+        print('this matrix is singular, cannot do inverse')
+        return
+    ws = denom.I * (xMat.T * yMat)
+    return ws
+
+
+def ridgeTest(xArr, yArr, numTestPts=30):
+    xMat = np.mat(xArr)
+    yMat = np.mat(yArr).T
+    xMat = (xMat - xMat.mean(0)) / xMat.var(0)
+    yMat = yMat - yMat.mean()
+    m, n = xMat.shape
+    wMat = np.zeros((numTestPts, n))
+    for i in range(numTestPts):
+        ws = ridgeRegress(xMat, yMat, np.exp(i - 10))
+        wMat[i, :] = ws.T
+    else:
+        return wMat
+
+
+def stageWise(xArr, yArr, eps=0.01, numIt=100):
+    xMat = np.mat(xArr)
+    yMat = np.mat(yArr).T
+    xMat = (xMat - xMat.mean(0)) / xMat.var(0)
+    yMat = yMat - yMat.mean()
+    m, n = xMat.shape
+    returnMat = np.zeros((numIt, n))
+    ws = np.zeros((n, 1))
+    wsMax = ws.copy()
+    for i in range(numIt):
+        lowestError = np.inf
+        for j in range(n):
+            for sign in [-1, +1]:
+                wsTest = ws.copy()
+                wsTest[j] += eps * sign
+                yTest = xMat * wsTest
+                rssE = rssError(yMat.A, yTest.A)
+                if rssE < lowestError:
+                    lowestError = rssE
+                    wsMax = wsTest
+        else:
+            ws = wsMax.copy()
+            returnMat[i, :] = ws.T
+    else:
+        return returnMat
+
+
+
+
+
+
