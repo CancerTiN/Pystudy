@@ -46,5 +46,37 @@ def test3():
     print('#' * 64)
 
 
+def test4():
+    print('#' * 64)
+    myDat2 = regTrees.loadDataSet('ex2.txt')
+    myMat2 = np.mat(myDat2)
+    retTree = regTrees.createTree(myMat2, ops=(1, 4))
+    print('retTree: {}'.format(retTree))
+    print('ops: {}'.format((1, 4)))
+    print('#' * 64)
+    retTree = regTrees.createTree(myMat2, ops=(10000, 4))
+    print('retTree: {}'.format(retTree))
+    print('ops: {}'.format((10000, 4)))
+    print('#' * 64)
+    retTree = regTrees.createTree(myMat2, ops=(0, 1))
+    print('retTree: {}'.format(retTree))
+    print('ops: {}'.format((0, 1)))
+    print('#' * 64)
+
+
+def test5():
+    print('#' * 64)
+    myDat2 = regTrees.loadDataSet('ex2.txt')
+    myMat2 = np.mat(myDat2)
+    myTree = regTrees.createTree(myMat2, ops=(1, 4))
+    print('myTree: {}'.format(myTree))
+    print('ops: {}'.format((1, 4)))
+    print('#' * 64)
+    myDat2Test = regTrees.loadDataSet('ex2test.txt')
+    myMat2Test = np.mat(myDat2Test)
+    pruneTree = regTrees.prune(myTree, myMat2Test)
+    print('pruneTree: {}'.format(pruneTree))
+
+
 if __name__ == '__main__':
-    test3()
+    test5()

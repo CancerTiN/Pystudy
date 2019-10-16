@@ -59,3 +59,37 @@ def createTree(dataSet, leafType=regLeaf, errType=regErr, ops=(1, 4)):
         'right': createTree(rSet, leafType, errType, ops),
     }
     return retTree
+
+
+def isTree(obj):
+    return isinstance(obj, dict)
+
+
+def getMean(tree):
+    if isTree(tree['left']):
+        tree['left'] = getMean(tree['left'])
+    if isTree(tree['right']):
+        tree['right'] = getMean(tree['right'])
+    return (tree['left'] + tree['right']) / 2.0
+
+
+def prune(tree, testData):
+    if np.shape(testData)[0] == 0:
+        return getMean(tree)
+    if isTree(tree['left']) or isTree(tree['right']):
+        lSet, rSet = binSplitDataSet(testData, tree['spInd'], tree['spVal'])
+    if isTree(tree['left']):
+        tree['left'] = prune(tree['left'], lSet)
+    if isTree(tree['right']):
+        tree['right'] = prune(tree['right'], rSet)
+    if not isTree(tree['left']) and not isTree(tree['right']):
+        lSet, rSet = binSplitDataSet(testData, tree['spInd'], tree['spVal'])
+        errorMerge = np.sum(sum(np.power(testData[:, -1] - (tree['left'] + tree['right']) / 2, 2)))
+        errorNoMerge = np.sum(sum(np.power(lSet[:, -1] - tree['left'], 2), np.power(rSet[:, -1] - tree['right'], 2)))
+        if errorMerge < errorNoMerge:
+            print('merging at node ({})'.format(tree['spVal']))
+            return (tree['left'] + tree['right']) / 2
+        else:
+            return tree
+    else:
+        return tree
