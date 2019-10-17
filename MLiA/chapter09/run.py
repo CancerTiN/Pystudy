@@ -78,5 +78,40 @@ def test5():
     print('pruneTree: {}'.format(pruneTree))
 
 
+def test6():
+    print('#' * 64)
+    myMat2 = np.mat(regTrees.loadDataSet('exp2.txt'))
+    print('myMat2: {}'.format(myMat2))
+    print('#' * 64)
+    myTree2 = regTrees.createTree(myMat2, regTrees.modelLeaf, regTrees.modelErr, (1, 10))
+    print('myTree2: {}'.format(myTree2))
+    print('#' * 64)
+
+
+def test7():
+    print('#' * 64)
+    trainMat = np.mat(regTrees.loadDataSet('bikeSpeedVsIq_train.txt'))
+    testMat = np.mat(regTrees.loadDataSet('bikeSpeedVsIq_test.txt'))
+    myTree = regTrees.createTree(trainMat, ops=(1, 20))
+    yHat = regTrees.createForeCase(myTree, testMat[:, 0])
+    corrcoef = np.corrcoef(yHat, testMat[:, 1], rowvar=0)[0, 1]
+    print('corrcoef from regTree: {}'.format(corrcoef))
+    print('#' * 64)
+    trainMat = np.mat(regTrees.loadDataSet('bikeSpeedVsIq_train.txt'))
+    testMat = np.mat(regTrees.loadDataSet('bikeSpeedVsIq_test.txt'))
+    myTree = regTrees.createTree(trainMat, regTrees.modelLeaf, regTrees.modelErr, ops=(1, 20))
+    yHat = regTrees.createForeCase(myTree, testMat[:, 0], regTrees.modelTreeEval)
+    corrcoef = np.corrcoef(yHat, testMat[:, 1], rowvar=0)[0, 1]
+    print('corrcoef from modelTree: {}'.format(corrcoef))
+    print('#' * 64)
+    ws, X, Y = regTrees.linearSolve(trainMat)
+    for i in range(np.shape(testMat)[0]):
+        yHat[i] = testMat[i, 0] * ws[1, 0] + ws[0, 0]
+    else:
+        corrcoef = np.corrcoef(yHat, testMat[:, 1], rowvar=0)[0, 1]
+    print('corrcoef from regression: {}'.format(corrcoef))
+    print('#' * 64)
+
+
 if __name__ == '__main__':
-    test5()
+    test7()
