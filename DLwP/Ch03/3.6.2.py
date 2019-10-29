@@ -1,4 +1,5 @@
 import logging
+import pickle
 
 import numpy as np
 from keras import layers
@@ -32,8 +33,8 @@ def build_model():
 
 k = 4
 num_val_samples = len(train_data) // k
-num_epochs = 100
-all_scores = list()
+num_epochs = 500
+all_mae_histories = list()
 
 for i in range(k):
     logging.debug('processing fold #{}'.format(i))
@@ -44,10 +45,14 @@ for i in range(k):
     partial_train_data = np.concatenate([train_data[:start], train_data[end:]], axis=0)
     partial_train_targets = np.concatenate([train_targets[:start], train_targets[end:]], axis=0)
     model = build_model()
-    model.fit(partial_train_data, partial_train_targets, batch_size=1, epochs=num_epochs, verbose=0)
-    val_mse, val_mae = model.evaluate(val_data, val_targets, verbose=0)
-    logging.debug(val_mse)
-    all_scores.append(val_mae)
+    history = model.fit(partial_train_data, partial_train_targets, batch_size=1, epochs=num_epochs, verbose=0,
+                        validation_data=(val_data, val_targets))
+    mae_history = history.history['val_mean_absolute_error']
+    logging.debug(mae_history)
+    all_mae_histories.append(mae_history)
+average_mae_history = [np.mean([x[i] for x in all_mae_histories]) for i in range(num_epochs)]
 
-logging.debug(all_scores)
-logging.debug(np.mean(all_scores))
+logging.debug(all_mae_histories)
+logging.debug(average_mae_history)
+
+pickle.dump(average_mae_history, open('average_mae_history.pk', 'wb'))

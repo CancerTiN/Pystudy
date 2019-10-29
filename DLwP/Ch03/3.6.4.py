@@ -1,6 +1,5 @@
 import logging
 
-import numpy as np
 from keras import layers
 from keras import models
 from keras.datasets import boston_housing
@@ -30,24 +29,9 @@ def build_model():
     return model
 
 
-k = 4
-num_val_samples = len(train_data) // k
-num_epochs = 100
-all_scores = list()
+model = build_model()
+model.fit(train_data, train_targets, batch_size=16, epochs=43)
+test_mse_score, test_mae_score = model.evaluate(test_data, test_targets)
 
-for i in range(k):
-    logging.debug('processing fold #{}'.format(i))
-    start = i * num_val_samples
-    end = (i + 1) * num_val_samples
-    val_data = train_data[start: end]
-    val_targets = train_targets[start: end]
-    partial_train_data = np.concatenate([train_data[:start], train_data[end:]], axis=0)
-    partial_train_targets = np.concatenate([train_targets[:start], train_targets[end:]], axis=0)
-    model = build_model()
-    model.fit(partial_train_data, partial_train_targets, batch_size=1, epochs=num_epochs, verbose=0)
-    val_mse, val_mae = model.evaluate(val_data, val_targets, verbose=0)
-    logging.debug(val_mse)
-    all_scores.append(val_mae)
-
-logging.debug(all_scores)
-logging.debug(np.mean(all_scores))
+logging.debug(test_mse_score)
+logging.debug(test_mae_score)
