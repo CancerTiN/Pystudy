@@ -6,7 +6,8 @@ from keras import layers
 from keras import models
 from keras import optimizers
 
-logging.basicConfig(format='%(asctime)s\t%(name)s\t%(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(format='%(asctime)s\t%(name)s\t%(levelname)s : %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
 
 train_features, train_labels, validation_features, validation_labels, test_features, test_labels = \
     pickle.load(open('extracted_objects.pk', 'rb'))
@@ -15,8 +16,8 @@ train_features = np.reshape(train_features, (2000, 4 * 4 * 512))
 validation_features = np.reshape(validation_features, (1000, 4 * 4 * 512))
 test_features = np.reshape(test_features, (1000, 4 * 4 * 512))
 
-logging.info(train_features)
-logging.info(train_labels)
+logging.debug(train_features)
+logging.debug(train_labels)
 
 model = models.Sequential()
 model.add(layers.Dense(256, activation='relu', input_dim=4 * 4 * 512))
