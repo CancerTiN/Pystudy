@@ -1,4 +1,5 @@
 import logging
+import pickle
 
 from keras import layers
 from keras import models
@@ -45,6 +46,7 @@ logging.info(
 model.summary()
 
 conv_base.trainable = True
+set_trainable = False
 for layer in conv_base.layers:
     if layer.name == 'block5_conv1':
         set_trainable = True
