@@ -74,4 +74,5 @@ if os.path.isfile('model.pk'):
                                                       batch_size=20)
     model = pickle.load(open('model.pk', 'rb'))
     test_loss, test_acc = model.evaluate_generator(test_generator, steps=50)
+    logging.info('test loss: {}'.format(test_loss))
     logging.info('test accuary: {}'.format(test_acc))
