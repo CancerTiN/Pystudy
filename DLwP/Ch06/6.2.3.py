@@ -2,6 +2,7 @@ import logging
 import pickle
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 logging.basicConfig(format='%(asctime)s\t%(name)s\t%(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger()
@@ -29,6 +30,8 @@ def smooth_curve(points, factor=0.8):
             smoothed_points.append(point)
     return smoothed_points
 
+
+logger.info('Get max accuracy ({}) at epochs ({})'.format(max(val_acc), np.argmax(val_acc) + 1))
 
 plt.plot(epochs, acc, 'bo', label='Training acc')
 plt.plot(epochs, val_acc, 'b', label='Validation acc')
