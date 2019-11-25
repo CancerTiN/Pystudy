@@ -1,3 +1,3 @@
-# web_study
+# python_study
 
-This repository just for studying web programming.
+This repository just for studying python programming.
