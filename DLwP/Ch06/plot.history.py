@@ -1,5 +1,7 @@
 import logging
+import os
 import pickle
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,7 +10,23 @@ logging.basicConfig(format='%(asctime)s\t%(name)s\t%(levelname)s : %(message)s',
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-history = pickle.load(open('history.pk', 'rb'))
+if len(sys.argv) < 2:
+    logger.error('Missing argument in command, abord')
+    sys.exit(-1)
+else:
+    history_pk = sys.argv[1]
+    if not os.path.isfile(history_pk):
+        logger.error('Can not find {}, abord'.format(history_pk))
+        sys.exit(-2)
+    if len(sys.argv) >= 3:
+        if sys.argv[2] == '-s':
+            flag_smooth = True
+        else:
+            flag_smooth = False
+    else:
+        flag_smooth = False
+
+history = pickle.load(open(sys.argv[1], 'rb'))
 logging.info(history.history.keys())
 
 loss = history.history['loss']
@@ -57,21 +75,22 @@ plt.legend()
 plt.waitforbuttonpress()
 plt.close()
 
-if flag_acc:
-    plt.plot(smooth_curve(epochs), acc, 'bo', label='Smoothed training acc')
-    plt.plot(smooth_curve(epochs), val_acc, 'b', label='Smoothed validation acc')
-    plt.title('Training and validation accuracy')
+if flag_smooth:
+    if flag_acc:
+        plt.plot(smooth_curve(epochs), acc, 'bo', label='Smoothed training acc')
+        plt.plot(smooth_curve(epochs), val_acc, 'b', label='Smoothed validation acc')
+        plt.title('Training and validation accuracy')
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+        plt.legend()
+        plt.waitforbuttonpress()
+        plt.close()
+
+    plt.plot(smooth_curve(epochs), loss, 'bo', label='Smoothed training loss')
+    plt.plot(smooth_curve(epochs), val_loss, 'b', label='Smoothed validation loss')
+    plt.title('Training and validation loss')
     plt.xlabel('Epochs')
-    plt.ylabel('Accuracy')
+    plt.ylabel('Loss')
     plt.legend()
     plt.waitforbuttonpress()
     plt.close()
-
-plt.plot(smooth_curve(epochs), loss, 'bo', label='Smoothed training loss')
-plt.plot(smooth_curve(epochs), val_loss, 'b', label='Smoothed validation loss')
-plt.title('Training and validation loss')
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
-plt.legend()
-plt.waitforbuttonpress()
-plt.close()

@@ -84,14 +84,13 @@ val_steps = (300000 - 200001 - lookback) // batch_size
 test_steps = (len(float_data) - 300001 - lookback) // batch_size
 
 model = Sequential()
-model.add(layers.Flatten(input_shape=(lookback // step, float_data.shape[-1])))
-model.add(layers.Dense(32, activation='relu'))
+model.add(layers.GRU(32, input_shape=(None, float_data.shape[-1])))
 model.add(layers.Dense(1))
-model.compile(optimizer=RMSprop(), loss='mae')
+model.compile(optimizer=RMSprop(), loss='mae', metrics=['acc'])
 history = model.fit_generator(train_gen,
                               steps_per_epoch=500,
                               epochs=20,
                               validation_data=val_gen,
                               validation_steps=val_steps)
 
-pickle.dump(history, open('history.632.pk', 'wb'))
+pickle.dump(history, open('history.633.pk', 'wb'))
