@@ -66,6 +66,7 @@ if flag_acc:
     plt.waitforbuttonpress()
     plt.close()
 
+logger.info('Get min loss ({}) at epochs ({})'.format(max(val_loss), np.argmin(val_loss) + 1))
 plt.plot(epochs, loss, 'bo', label='Training loss')
 plt.plot(epochs, val_loss, 'b', label='Validation loss')
 plt.title('Training and validation loss')
