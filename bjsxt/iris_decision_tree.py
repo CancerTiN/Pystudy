@@ -21,25 +21,34 @@ target = iris['target']
 X = data[:, :2]
 y = target
 
-x_train, x_test, y_train, y_test = train_test_split(X, y, train_size=0.75, random_state=42)
+logger.info('Training data with parameters as follow:\n{}'.format(
+    {'train_size': 0.75, 'random_state': 42, 'criterion': 'entropy', 'max_depth': 8}))
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75, random_state=42)
 
 tree_clf = DecisionTreeClassifier(criterion='entropy', max_depth=8)
-tree_clf.fit(x_train, y_train)
+tree_clf.fit(X_train, y_train)
 
-y_hat = tree_clf.predict(x_test)
+y_hat = tree_clf.predict(X_test)
 
 acc = accuracy_score(y_test, y_hat)
+
 logger.info('Accuracy score: {}'.format(acc))
+
+logger.info('Test a sample with a sepal length of 5 cm and a sepal width of 1.5 cm')
 
 x_self = np.array([[5, 1.5]])
 y_self = tree_clf.predict(x_self)
 y_self_proba = tree_clf.predict_proba(x_self)
+y_class = iris.target_names[y_self]
+
+logger.info('Sample is classified as {} with {} proba ref to {}'.format(y_class, y_self_proba, iris.target_names))
 
 errs = list()
 for depth in range(1, 15):
     clf = DecisionTreeClassifier(criterion='entropy', max_depth=depth)
-    clf.fit(x_train, y_train)
-    y_hat = clf.predict(x_test)
+    clf.fit(X_train, y_train)
+    y_hat = clf.predict(X_test)
     score = (y_test == y_hat)
     err = 1 - np.mean(score)
     errs.append(err)

@@ -7,13 +7,15 @@ X = 2 * np.random.rand(100, 1)
 y = 4 + 3 * X + np.random.randn(100, 1)
 x_test = np.array(1.5).reshape(-1, 1)
 
-rideg_reg = Ridge(alpha=1.0, solver='sag')
-rideg_reg.fit(X, y)
+ridge_reg = Ridge(alpha=1.0, solver='sag')
+ridge_reg.fit(X, y)
 
-print(rideg_reg.intercept_)
-print(rideg_reg.coef_)
+print(ridge_reg.intercept_)
+print(ridge_reg.coef_)
 
-y_test = rideg_reg.predict(x_test)
+theta_ridge = np.array([ridge_reg.intercept_, ridge_reg.coef_])
+
+y_test = ridge_reg.predict(x_test)
 
 print(y_test)
 
@@ -23,6 +25,8 @@ sgd_reg.fit(X, y.ravel())
 print('w0 -> {}'.format(sgd_reg.intercept_))
 print('w1 -> {}'.format(sgd_reg.coef_))
 
-y_test = rideg_reg.predict(x_test)
+theta_sgd_l2 = np.array([sgd_reg.intercept_, sgd_reg.coef_])
+
+y_test = ridge_reg.predict(x_test)
 
 print(y_test)

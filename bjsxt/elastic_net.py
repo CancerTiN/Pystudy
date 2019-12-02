@@ -15,6 +15,8 @@ y_test = elastic_net.predict(x_test)
 print(elastic_net.intercept_)
 print(elastic_net.coef_)
 
+theta_elastic = np.array([elastic_net.intercept_, elastic_net.coef_])
+
 print(y_test)
 
 sgd_reg = SGDRegressor(penalty='elasticnet', n_iter_no_change=900)
@@ -22,6 +24,8 @@ sgd_reg.fit(X, y.ravel())
 
 print('w0 -> {}'.format(sgd_reg.intercept_))
 print('w1 -> {}'.format(sgd_reg.coef_))
+
+theta_sgd_el = np.array([sgd_reg.intercept_, sgd_reg.coef_])
 
 y_test = elastic_net.predict(x_test)
 

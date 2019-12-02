@@ -2,6 +2,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 X = 2 * np.random.rand(100, 1)
 y = 4 + 3 * X + np.random.randn(100, 1)
@@ -15,7 +16,13 @@ X_new_b = np.c_[np.ones((2, 1)), X_new]
 
 y_predict = X_new_b.dot(theta_best)
 
+lin_reg = LinearRegression()
+lin_reg.fit(X, y)
+
+y_predict_model = lin_reg.predict(X_new)
+
 plt.plot(X_new, y_predict, 'r-')
+plt.plot(X_new, y_predict_model, 'o-')
 plt.plot(X, y, 'b.')
 plt.axis([0, 2, 0, 15])
 plt.show()
