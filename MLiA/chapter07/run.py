@@ -39,7 +39,7 @@ def test2():
     classifierArray, aggClassEst = adaboost.adaBoostTrainDS(dataMatrix, classLabels)
     print('classifierArray: {}'.format(classifierArray))
     print('#' * 64)
-    testData = [[5, 5], [1.1, 1.1], [1.1, 1], [1, 1], [0, 0]]
+    testData = [[5, 5], [1.1, 1.1], [1.1, 1], [1, 1], [0, 0], [2, 1]]
     print('testData: {}'.format(testData))
     testPred = adaboost.adaClassify(testData, classifierArray)
     print('testPred: {}'.format(testPred))
@@ -79,4 +79,4 @@ def test4():
 
 
 if __name__ == '__main__':
-    test4()
+    test2()
